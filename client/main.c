@@ -12,21 +12,6 @@
 void bytes_to_hex(unsigned const char *const input, unsigned int length, unsigned char *const output);
 
 int main() {
-//    struct mbedtls_md_context_t md_ctx;
-//    mbedtls_md_init(&md_ctx);
-//
-//    struct mbedtls_md_info_t const *md_info = mbedtls_md_info_from_type(MBEDTLS_MD_MD5);
-//    if (mbedtls_md_setup(&md_ctx, md_info, 0) != 0) {
-//        printf("[err] mbedtls_md_setup\n");
-//        return 1;
-//    }
-//
-//    unsigned char md5_hash[16];
-//    if (mbedtls_md5_ret((const unsigned char *) "a", 1, md5_hash) != 0) {
-//        printf("[err] mbedtls_md5_ret\n");
-//        return 1;
-//    }
-
     char *buffer = "123";
 
     unsigned char hash_bytes[MD5_SIZE_BYTES];

@@ -5,6 +5,5 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(client main.c)
 
-#add_subdirectory(lib/mbedtls-2.16.6/library)
 add_subdirectory(lib/mbedtls-2.16.6)
 target_link_libraries(client mbedtls)
