@@ -3,7 +3,7 @@ project(client C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(client main.c)
+add_executable(client main.c helper.c helper.h)
 
 add_subdirectory(lib/mbedtls-2.16.6)
 target_link_libraries(client mbedtls)
