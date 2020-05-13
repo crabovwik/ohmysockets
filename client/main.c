@@ -1,9 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-#include "lib/mbedtls-2.16.6/include/mbedtls/md.h"
-#include "lib/mbedtls-2.16.6/include/mbedtls/md_internal.h"
 #include "lib/mbedtls-2.16.6/include/mbedtls/md5.h"
 
 #define MD5_SIZE_BYTES 16
