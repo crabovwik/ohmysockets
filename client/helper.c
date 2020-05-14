@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <syscall.h>
 #include <linux/random.h>
+#include <strings.h>
 
 #include "helper.h"
 #include "lib/mbedtls-2.16.6/include/mbedtls/md5.h"
@@ -42,6 +43,61 @@ unsigned int helper_get_random_bytes(unsigned char *const buffer, unsigned int s
     if (syscall(SYS_getrandom, (void *) buffer, size, NULL/*GRND_NONBLOCK*/) != size) {
         return 1;
     }
+
+    return 0;
+}
+
+unsigned int helper_cycle_read_from_csv_file(FILE *fd, int16_t *const buffer, unsigned int size) {
+    if (size % sizeof(int16_t) != 0) {
+        return 1;
+    }
+
+    unsigned int elements_count = size / sizeof(int16_t);
+    for (unsigned int i = 0; i < elements_count; i++) {
+        if (helper_read_int16_from_csv_file(fd, buffer + i) != 0) {
+            printf("[err] helper_read_int16_from_csv_file\n");
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+unsigned int helper_read_int16_from_csv_file(FILE *const fd, int16_t *const buffer) {
+    unsigned char ascii_int16[MAX_ASCII_CHARS_COUNT_IN_INT32_VALUE];
+    bzero(ascii_int16, MAX_ASCII_CHARS_COUNT_IN_INT32_VALUE);
+
+    int i = 0;
+    int c;
+    while (1) {
+        if ((c = fgetc(fd)) == EOF) {
+            fseek(fd, 0, SEEK_SET);
+        }
+
+//        printf("c: %c\n", c);
+
+        if ((c >= '0' && c <= '9') || (c == '-' && i == 0)) {
+            ascii_int16[i++] = (unsigned char) c;
+            continue;
+        }
+
+        if (i != 0) {
+            break;
+        }
+    }
+
+//    char *end;
+//
+//    printf("%s\n", ascii_int16);
+//    printf("%hd\n", atoi(ascii_int16));
+//    printf("%hd\n", strtoul((const char *) ascii_int16, &end, 10));
+//
+//    exit(1);
+
+//    strtoul()
+    char *end;
+    *buffer = (int16_t) strtoul((const char *) ascii_int16, &end, 10);
+//    *buffer = (int16_t) atoi(ascii_int16); // NOLINT (ert-err34-c)
 
     return 0;
 }
