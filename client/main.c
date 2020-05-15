@@ -11,8 +11,8 @@
 
 #include "../common/helper/helper.h"
 
-#define BATCH_LOOPS 1
-#define BATCH_SIZE 50
+#define BATCH_LOOPS 2
+#define BATCH_SIZE 100
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -119,12 +119,6 @@ int main(int argc, char **argv) {
             }
 
             printf("Sent: #%d #%lu\n", packet_number, original_microtime);
-
-            for (unsigned int k = 0; k < 3; k++) {
-                printf(" %hu", origin_data[k]);
-            }
-
-            printf("\n");
 
             // packet sleep
             usleep(1000 * 10);

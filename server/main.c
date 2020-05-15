@@ -59,8 +59,6 @@ int main(int argc, char **argv) {
         }
 
         while ((read_bytes = read(connectionfd, buffer, PACKET_TOTAL_SIZE)) > 0) {
-            printf("received size: %d\n", read_bytes);
-
             uint16_t *packet_number_ptr = (uint16_t *) buffer;
             uint64_t *microtime_ptr = (uint64_t *) (((char *) packet_number_ptr) + PACKET_NUMBER_SIZE);
             int16_t *data_ptr = (int16_t *) (((char *) microtime_ptr) + PACKET_MICROTIME_SIZE);
