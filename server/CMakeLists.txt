@@ -5,9 +5,9 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(server main.c ../common/helper/helper.c ../common/helper/helper.h)
 
-include_directories(/home/username/code/ohmysockets/common/lib/mbedtls-2.16.6/build/include)
-link_directories(/home/username/code/ohmysockets/common/lib/mbedtls-2.16.6/build/library)
+include_directories(${CMAKE_HOME_DIRECTORY}/common/lib/mbedtls-2.16.6/build/include)
+link_directories(${CMAKE_HOME_DIRECTORY}/common/lib/mbedtls-2.16.6/build/library)
 
-target_link_libraries(server /home/username/code/ohmysockets/common/lib/mbedtls-2.16.6/build/library/libmbedcrypto.a)
-target_link_libraries(server /home/username/code/ohmysockets/common/lib/mbedtls-2.16.6/build/library/libmbedtls.a)
-target_link_libraries(server /home/username/code/ohmysockets/common/lib/mbedtls-2.16.6/build/library/libmbedx509.a)
+target_link_libraries(server ${CMAKE_HOME_DIRECTORY}/common/lib/mbedtls-2.16.6/build/library/libmbedcrypto.a)
+target_link_libraries(server ${CMAKE_HOME_DIRECTORY}/common/lib/mbedtls-2.16.6/build/library/libmbedtls.a)
+target_link_libraries(server ${CMAKE_HOME_DIRECTORY}/common/lib/mbedtls-2.16.6/build/library/libmbedx509.a)
