@@ -5,9 +5,12 @@
 #include <syscall.h>
 #include <linux/random.h>
 #include <strings.h>
+#include <endian.h>
+#include <errno.h>
+#include <sys/time.h>
 
 #include "helper.h"
-#include "lib/mbedtls-2.16.6/include/mbedtls/md5.h"
+//#include "lib/mbedtls-2.16.6/include/mbedtls/md5.h"
 
 void helper_bytes_to_hex(const unsigned char *const input, unsigned int size, unsigned char *const output) {
     for (unsigned int input_index = 0, output_index = 0; input_index < size; input_index++, output_index += 2) {
@@ -74,8 +77,6 @@ unsigned int helper_read_int16_from_csv_file(FILE *const fd, int16_t *const buff
             fseek(fd, 0, SEEK_SET);
         }
 
-//        printf("c: %c\n", c);
-
         if ((c >= '0' && c <= '9') || (c == '-' && i == 0)) {
             ascii_int16[i++] = (unsigned char) c;
             continue;
@@ -86,18 +87,53 @@ unsigned int helper_read_int16_from_csv_file(FILE *const fd, int16_t *const buff
         }
     }
 
-//    char *end;
-//
-//    printf("%s\n", ascii_int16);
-//    printf("%hd\n", atoi(ascii_int16));
-//    printf("%hd\n", strtoul((const char *) ascii_int16, &end, 10));
-//
-//    exit(1);
-
-//    strtoul()
     char *end;
-    *buffer = (int16_t) strtoul((const char *) ascii_int16, &end, 10);
+    int16_t value = (int16_t) strtoul((const char *) ascii_int16, &end, 10);
+    switch (errno) {
+        case ERANGE:
+        case EINVAL:
+            return 1;
+    }
+
+    *buffer = value;
 //    *buffer = (int16_t) atoi(ascii_int16); // NOLINT (ert-err34-c)
 
     return 0;
+}
+
+unsigned int helper_get_system_endian() {
+    int i = 1;
+    char *p = (char *) &i;
+
+    return *p == 1 ? LITTLE_ENDIAN : BIG_ENDIAN;
+}
+
+void helper_flip_bytes(char *const buffer, unsigned int length) {
+    char tmp_byte;
+    for (unsigned int left_index = 0, right_index = length - 1; left_index < length; left_index++, right_index--) {
+        if (left_index == right_index || left_index > right_index) {
+            break;
+        }
+
+        tmp_byte = buffer[left_index];
+        buffer[left_index] = buffer[right_index];
+        buffer[right_index] = tmp_byte;
+    }
+}
+
+void header_flip_int32(int32_t *ptr) {
+    helper_flip_bytes((char *) ptr, sizeof(int32_t));
+}
+
+void header_flip_int32_array(int32_t *ptr, unsigned int length) {
+    for (unsigned int i = 0; i < length; i++) {
+        header_flip_int32(ptr + i);
+    }
+}
+
+uint64_t helper_get_current_time_in_microseconds() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    return 1000000 * tv.tv_sec + tv.tv_usec;
 }
