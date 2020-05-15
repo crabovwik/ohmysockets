@@ -6,6 +6,7 @@
 #include <endian.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <mbedtls/md5.h>
 
 #include "helper.h"
 

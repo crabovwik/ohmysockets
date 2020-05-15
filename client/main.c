@@ -9,6 +9,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include <helper.h>
+#include <mbedtls/md5.h>
 
 #define BATCH_LOOPS 2
 #define BATCH_SIZE 100

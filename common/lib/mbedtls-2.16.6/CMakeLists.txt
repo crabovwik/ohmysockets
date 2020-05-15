@@ -186,6 +186,8 @@ endif(ENABLE_ZLIB_SUPPORT)
 add_subdirectory(library)
 add_subdirectory(include)
 
+target_include_directories(mbedtls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 if(ENABLE_PROGRAMS)
     add_subdirectory(programs)
 endif()

@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <helper.h>
+#include <mbedtls/md5.h>
 
 static char *STATUS_PASS = "pass";
 static char *STATUS_FAIL = "fail";

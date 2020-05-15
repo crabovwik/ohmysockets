@@ -15,8 +15,6 @@
 
 #define MAX_ASCII_CHARS_COUNT_IN_INT32_VALUE 6 // with minus
 
-int mbedtls_md5_ret(const unsigned char *input, size_t ilen, unsigned char output[16]);
-
 void helper_bytes_to_hex(const unsigned char *const input, unsigned int size, unsigned char *const output);
 
 unsigned int
