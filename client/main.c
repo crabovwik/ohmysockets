@@ -8,8 +8,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <inttypes.h>
-
-#include "../common/helper/helper.h"
+#include <helper.h>
 
 #define BATCH_LOOPS 2
 #define BATCH_SIZE 100

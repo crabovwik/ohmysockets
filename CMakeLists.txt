@@ -3,6 +3,7 @@ project(ohmysockets C)
 
 set(CMAKE_C_STANDARD 11)
 
+add_subdirectory(common/helper)
 add_subdirectory(common/lib/mbedtls-2.16.6)
 
 add_subdirectory(client)

@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
-#include "../common/helper/helper.h"
+#include <helper.h>
 
 static char *STATUS_PASS = "pass";
 static char *STATUS_FAIL = "fail";
