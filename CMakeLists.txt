@@ -3,5 +3,10 @@ project(ohmysockets C)
 
 set(CMAKE_C_STANDARD 11)
 
+add_subdirectory(common/lib/mbedtls-2.16.6)
+
 add_subdirectory(client)
 add_subdirectory(server)
+
+add_dependencies(client mbedtls)
+add_dependencies(server mbedtls)
