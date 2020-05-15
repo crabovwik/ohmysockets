@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
 
     int connectionfd;
     int read_bytes;
-    char buffer[3226];
-    bzero(buffer, 3226);
+    char buffer[PACKET_TOTAL_SIZE];
+    bzero(buffer, PACKET_TOTAL_SIZE);
     // epoll?
     while (1) {
         if ((connectionfd = accept(socketfd, (struct sockaddr *) NULL, NULL)) < 0) {
@@ -58,13 +58,13 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        while ((read_bytes = read(connectionfd, buffer, 3226)) > 0) {
+        while ((read_bytes = read(connectionfd, buffer, PACKET_TOTAL_SIZE)) > 0) {
             printf("received size: %d\n", read_bytes);
 
             uint16_t *packet_number_ptr = (uint16_t *) buffer;
-            uint64_t *microtime_ptr = (uint64_t *) (((char *) packet_number_ptr) + sizeof(uint16_t));
-            int16_t *data_ptr = (int16_t *) (((char *) microtime_ptr) + sizeof(uint64_t));
-            unsigned char *md5_ptr = ((unsigned char *) data_ptr) + (sizeof(int16_t) * 1600);
+            uint64_t *microtime_ptr = (uint64_t *) (((char *) packet_number_ptr) + PACKET_NUMBER_SIZE);
+            int16_t *data_ptr = (int16_t *) (((char *) microtime_ptr) + PACKET_MICROTIME_SIZE);
+            unsigned char *md5_ptr = ((unsigned char *) data_ptr) + PACKET_DATA_MAX_SIZE;
 
             // packet number
             uint16_t packet_number = ntohs(*packet_number_ptr);
@@ -77,27 +77,27 @@ int main(int argc, char **argv) {
             }
 
             // data
-            int16_t data[1600];
-            memcpy(data, data_ptr, sizeof(int16_t) * 1600);
-            for (unsigned int i = 0; i < 700; i++) {
+            int16_t data[PACKET_DATA_INT16_WORDS_COUNT];
+            memcpy(data, data_ptr, PACKET_DATA_SIZE);
+            for (unsigned int i = 0; i < PACKET_DATA_INT16_WORDS_COUNT; i++) {
                 data[i] = ntohs(data[i]);
             }
 
             // md5
-            unsigned char md5[16];
-            memcpy(md5, md5_ptr, 16);
+            unsigned char md5[MD5_SIZE_BYTES];
+            memcpy(md5, md5_ptr, MD5_SIZE_BYTES);
             if (helper_get_system_endian() != BIG_ENDIAN) {
-                helper_flip_bytes((char *) md5, 16);
+                helper_flip_bytes((char *) md5, MD5_SIZE_BYTES);
             }
 
-            char md5_generated[16];
-            if (mbedtls_md5_ret((const unsigned char *) data, sizeof(int16_t) * 700,
+            char md5_generated[MD5_SIZE_BYTES];
+            if (mbedtls_md5_ret((const unsigned char *) data, PACKET_DATA_SIZE,
                                 (unsigned char *) md5_generated) != 0) {
                 printf("[error] mbedtls_md5_ret\n");
                 return 1;
             }
 
-            char *status = memcmp(md5, md5_generated, 16) == 0 ? STATUS_PASS : STATUS_FAIL;
+            char *status = memcmp(md5, md5_generated, MD5_SIZE_BYTES) == 0 ? STATUS_PASS : STATUS_FAIL;
 
             printf("Received: #%d #%lu %s\n", packet_number, microtime, status);
         }

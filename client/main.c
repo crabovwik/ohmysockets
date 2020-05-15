@@ -11,12 +11,6 @@
 
 #include "../common/helper/helper.h"
 
-#define PACKET_DATA_INT16_WORDS_COUNT 700
-#define PACKET_DATA_SIZE (PACKET_DATA_INT16_WORDS_COUNT * sizeof(int16_t))
-#define PACKET_NUMBER_SIZE sizeof(uint16_t)
-#define PACKET_MICROTIME_SIZE sizeof(uint64_t)
-#define PACKET_DATA_MAX_SIZE (sizeof(int16_t) * 1600)
-#define PACKET_TOTAL_SIZE (PACKET_NUMBER_SIZE + PACKET_MICROTIME_SIZE + PACKET_DATA_MAX_SIZE + MD5_SIZE_BYTES)
 #define BATCH_LOOPS 1
 #define BATCH_SIZE 50
 
