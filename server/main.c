@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
             return 1;
     }
 
-    server_address.sin_port = ntohs(port);
+    server_address.sin_port = htons(port);
 
     if (bind(socketfd, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
         printf("[error] bind\n");
