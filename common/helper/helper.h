@@ -1,7 +1,7 @@
 #ifndef CLIENT_HELPER_H
 #define CLIENT_HELPER_H
 
-#include <stdint-gcc.h>
+#include <inttypes.h>
 
 #define MD5_SIZE_BYTES 16
 #define MD5_SIZE_HEX (MD5_SIZE_BYTES * 2)

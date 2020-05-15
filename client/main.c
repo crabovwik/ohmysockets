@@ -9,7 +9,7 @@
 #include <time.h>
 #include <inttypes.h>
 
-#include "helper.h"
+#include "../common/helper/helper.h"
 
 #define PACKET_DATA_INT16_WORDS_COUNT 700
 #define PACKET_DATA_SIZE (PACKET_DATA_INT16_WORDS_COUNT * sizeof(int16_t))

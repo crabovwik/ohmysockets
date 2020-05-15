@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../client/helper.h"
+#include "../common/helper/helper.h"
 
 static char *STATUS_PASS = "pass";
 static char *STATUS_FAIL = "fail";

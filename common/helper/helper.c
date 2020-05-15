@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
 #include <syscall.h>
-#include <linux/random.h>
 #include <strings.h>
 #include <endian.h>
 #include <errno.h>
 #include <sys/time.h>
 
 #include "helper.h"
-//#include "lib/mbedtls-2.16.6/include/mbedtls/md5.h"
 
 void helper_bytes_to_hex(const unsigned char *const input, unsigned int size, unsigned char *const output) {
     for (unsigned int input_index = 0, output_index = 0; input_index < size; input_index++, output_index += 2) {
@@ -96,7 +93,6 @@ unsigned int helper_read_int16_from_csv_file(FILE *const fd, int16_t *const buff
     }
 
     *buffer = value;
-//    *buffer = (int16_t) atoi(ascii_int16); // NOLINT (ert-err34-c)
 
     return 0;
 }
