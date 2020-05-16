@@ -5,4 +5,4 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(server main.c)
 
-target_link_libraries(server helper mbedtls)
+target_link_libraries(server helper network mbedtls)

@@ -1,52 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <syscall.h>
 #include <strings.h>
 #include <endian.h>
 #include <errno.h>
 #include <sys/time.h>
-#include <mbedtls/md5.h>
 
 #include "helper.h"
-
-void helper_bytes_to_hex(const unsigned char *const input, unsigned int size, unsigned char *const output) {
-    for (unsigned int input_index = 0, output_index = 0; input_index < size; input_index++, output_index += 2) {
-        sprintf(((char *) output) + output_index, "%02x", input[input_index]);
-    }
-}
-
-unsigned int
-helper_md5(const unsigned char *const input, unsigned int size, const unsigned char output[MD5_SIZE_HEX + 1]) {
-    unsigned char hash_bytes[MD5_SIZE_BYTES];
-    if ((mbedtls_md5_ret(input, size, (unsigned char *) hash_bytes)) != 0) {
-        return 1;
-    }
-
-    helper_bytes_to_hex((unsigned const char *const) hash_bytes, MD5_SIZE_BYTES, (unsigned char *const) output);
-
-    return 0;
-}
-
-unsigned int helper_fill_with_int16(int16_t *const buffer, unsigned int size) {
-    if (size % sizeof(int16_t) != 0) {
-        return 1;
-    }
-
-    if (helper_get_random_bytes((unsigned char *const) buffer, size) != 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
-unsigned int helper_get_random_bytes(unsigned char *const buffer, unsigned int size) {
-    if (syscall(SYS_getrandom, (void *) buffer, size, NULL/*GRND_NONBLOCK*/) != size) {
-        return 1;
-    }
-
-    return 0;
-}
 
 unsigned int helper_cycle_read_from_csv_file(FILE *fd, int16_t *const buffer, unsigned int size) {
     if (size % sizeof(int16_t) != 0) {
@@ -115,16 +74,6 @@ void helper_flip_bytes(char *const buffer, unsigned int length) {
         tmp_byte = buffer[left_index];
         buffer[left_index] = buffer[right_index];
         buffer[right_index] = tmp_byte;
-    }
-}
-
-void header_flip_int32(int32_t *ptr) {
-    helper_flip_bytes((char *) ptr, sizeof(int32_t));
-}
-
-void header_flip_int32_array(int32_t *ptr, unsigned int length) {
-    for (unsigned int i = 0; i < length; i++) {
-        header_flip_int32(ptr + i);
     }
 }
 
