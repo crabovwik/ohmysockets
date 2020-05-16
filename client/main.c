@@ -22,37 +22,34 @@ int main(int argc, char **argv) {
 
     FILE *csvfd = fopen("../client/data.csv", "r");
     if (csvfd == NULL) {
-        printf("[error] fopen\n");
+        helper_error_message("fopen");
         return 1;
     }
 
     int socketfd;
     if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("[error] socket\n");
+        helper_error_message("socket");
         return 1;
     }
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
 
-    char *endptr;
-    short int port = (short int) strtoul(argv[2], &endptr, 10);
-    switch (errno) {
-        case ERANGE:
-        case EINVAL:
-            printf("[error] port parsing\n");
-            return 1;
+    unsigned short port;
+    if (helper_parse_port(argv[2], &port) != 0) {
+        helper_error_message("port parsing");
+        return 1;
     }
 
     server_address.sin_port = htons(port);
 
     if (inet_pton(AF_INET, argv[1], &server_address.sin_addr) <= 0) {
-        printf("[error] inet_pton\n");
+        helper_error_message("inet_pton");
         return 1;
     }
 
     if (connect(socketfd, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        printf("[error] connect\n");
+        helper_error_message("connect");
         return 1;
     }
 
@@ -82,7 +79,7 @@ int main(int argc, char **argv) {
 
             // data
             if (helper_cycle_read_from_csv_file(csvfd, data, PACKET_DATA_SIZE) != 0) {
-                printf("[error] helper_cycle_read_from_csv_file\n");
+                helper_error_message("helper_cycle_read_from_csv_file");
                 return 1;
             }
 
@@ -98,7 +95,7 @@ int main(int argc, char **argv) {
             bzero(hash_bytes, MD5_SIZE_BYTES);
             if ((mbedtls_md5_ret((const unsigned char *) origin_data, PACKET_DATA_SIZE,
                                  (unsigned char *) hash_bytes)) != 0) {
-                printf("[error] mbedtls_md5_ret\n");
+                helper_error_message("mbedtls_md5_ret");
                 return 1;
             }
 
@@ -114,7 +111,7 @@ int main(int argc, char **argv) {
 
             // send
             if (write(socketfd, result_packet_buffer, PACKET_TOTAL_SIZE) != PACKET_TOTAL_SIZE) {
-                printf("[error] write\n");
+                helper_error_message("write");
                 return 1;
             }
 

@@ -1,5 +1,5 @@
-#ifndef CLIENT_HELPER_H
-#define CLIENT_HELPER_H
+#ifndef COMMON_HELPER_H
+#define COMMON_HELPER_H
 
 #include <inttypes.h>
 
@@ -40,4 +40,8 @@ void header_flip_int32(int32_t *ptr);
 
 void header_flip_int32_array(int32_t *ptr, unsigned int length);
 
-#endif //CLIENT_HELPER_H
+unsigned short int helper_parse_port(char *data, unsigned short *result);
+
+void helper_error_message(char *message);
+
+#endif //COMMON_HELPER_H

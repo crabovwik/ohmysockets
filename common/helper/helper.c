@@ -134,3 +134,19 @@ uint64_t helper_get_current_time_in_microseconds() {
 
     return 1000000 * tv.tv_sec + tv.tv_usec;
 }
+
+unsigned short int helper_parse_port(char *data, unsigned short *result) {
+    char *endptr;
+    *result = (unsigned short int) strtoul(data, &endptr, 10);
+    switch (errno) {
+        case ERANGE:
+        case EINVAL:
+            return 1;
+    }
+
+    return 0;
+}
+
+void helper_error_message(char *message) {
+    printf("[error] %s\n", message);
+}

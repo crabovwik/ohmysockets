@@ -26,24 +26,21 @@ int main(int argc, char **argv) {
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    char *endptr;
-    short int port = (short int) strtoul(argv[1], &endptr, 10);
-    switch (errno) {
-        case ERANGE:
-        case EINVAL:
-            printf("[error] port parsing\n");
-            return 1;
+    unsigned short port;
+    if (helper_parse_port(argv[1], &port) != 0) {
+        helper_error_message("port parsing");
+        return 1;
     }
 
     server_address.sin_port = htons(port);
 
     if (bind(socketfd, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        printf("[error] bind\n");
+        helper_error_message("bind");
         return 1;
     }
 
     if (listen(socketfd, 1024) < 0) {
-        printf("[error] listen\n");
+        helper_error_message("listen");
         return 1;
     }
 
@@ -54,7 +51,7 @@ int main(int argc, char **argv) {
     // epoll?
     while (1) {
         if ((connectionfd = accept(socketfd, (struct sockaddr *) NULL, NULL)) < 0) {
-            printf("[error] accept\n");
+            helper_error_message("accept");
             return 1;
         }
 
@@ -91,7 +88,7 @@ int main(int argc, char **argv) {
             char md5_generated[MD5_SIZE_BYTES];
             if (mbedtls_md5_ret((const unsigned char *) data, PACKET_DATA_SIZE,
                                 (unsigned char *) md5_generated) != 0) {
-                printf("[error] mbedtls_md5_ret\n");
+                helper_error_message("mbedtls_md5_ret");
                 return 1;
             }
 
