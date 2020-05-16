@@ -28,9 +28,9 @@ void network_encode_packet(struct packet *packet, char *buffer) {
 
     // md5
     unsigned char *md5_ptr = (unsigned char *) (((char *) data_ptr) + NETWORK_PACKET_DATA_SIZE);
-    memcpy(md5_ptr, packet->md5, MD5_SIZE_BYTES);
+    memcpy(md5_ptr, packet->md5, NETWORK_PACKET_MD5_SIZE);
     if (helper_get_system_endian() != BIG_ENDIAN) {
-        helper_flip_bytes((char *) md5_ptr, MD5_SIZE_BYTES);
+        helper_flip_bytes((char *) md5_ptr, NETWORK_PACKET_MD5_SIZE);
     }
 }
 
@@ -59,9 +59,9 @@ void network_decode_packet(char *buffer, struct packet *packet) {
 
     // md5
     unsigned char *md5_ptr = (unsigned char *) (((char *) data_ptr) + NETWORK_PACKET_DATA_SIZE);
-    memcpy(&packet->md5, md5_ptr, MD5_SIZE_BYTES);
+    memcpy(&packet->md5, md5_ptr, NETWORK_PACKET_MD5_SIZE);
 
     if (helper_get_system_endian() != BIG_ENDIAN) {
-        helper_flip_bytes((char *) &packet->md5, MD5_SIZE_BYTES);
+        helper_flip_bytes((char *) &packet->md5, NETWORK_PACKET_MD5_SIZE);
     }
 }

@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#define MD5_SIZE_BYTES 16
-
 #define MAX_ASCII_CHARS_COUNT_IN_INT32_VALUE 6
 
 unsigned int helper_cycle_read_from_csv_file(FILE *fd, int16_t *const buffer, unsigned int size);

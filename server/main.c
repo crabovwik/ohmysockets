@@ -64,13 +64,13 @@ int main(int argc, char **argv) {
 
             network_decode_packet(buffer, &network_packet);
 
-            char md5_generated[MD5_SIZE_BYTES];
+            char md5_generated[NETWORK_PACKET_MD5_SIZE];
             if (mbedtls_md5_ret((const unsigned char *) &network_packet.data, NETWORK_PACKET_DATA_SIZE, (unsigned char *) md5_generated) != 0) {
                 helper_error_message("mbedtls_md5_ret");
                 return 1;
             }
 
-            char *status = memcmp(&network_packet.md5, md5_generated, MD5_SIZE_BYTES) == 0 ? STATUS_PASS : STATUS_FAIL;
+            char *status = memcmp(&network_packet.md5, md5_generated, NETWORK_PACKET_MD5_SIZE) == 0 ? STATUS_PASS : STATUS_FAIL;
 
             printf("Received: #%d #%lu %s\n", network_packet.number, network_packet.microtime, status);
         }
