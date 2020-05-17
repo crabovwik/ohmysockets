@@ -139,11 +139,7 @@ int main(int argc, char **argv) {
 }
 
 char *get_validation_message_by_validation_status(int i) {
-    if (i) {
-        return STATUS_PASS;
-    }
-
-    return STATUS_FAIL;
+    return i ? STATUS_PASS : STATUS_FAIL;
 }
 
 unsigned int read_not_less_than(int fd, char *buffer, unsigned int size) {
