@@ -182,6 +182,8 @@ unsigned int read_not_less_than(int fd, char *buffer, unsigned int size) {
         size_left = size - total_read_bytes;
         chunk_size = size_left < READ_CHUNK_SIZE ? size_left : READ_CHUNK_SIZE;
 
+        // client closed a connection when read returns zero.
+        // also we should remove the conn from bitset of select via FD_CLR.
         read_bytes_count = read(fd, buffer + total_read_bytes, chunk_size);
         if (read_bytes_count <= 0) {
             return 1;
