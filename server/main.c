@@ -87,53 +87,82 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    fd_set active_fd_set, read_fd_set;
+    FD_ZERO(&active_fd_set);
+    FD_SET(socketfd, &active_fd_set);
+
     pthread_t pthread;
     pthread_create(&pthread, NULL, worker, NULL);
 
+    int i;
     int connectionfd;
     char buffer[NETWORK_PACKET_TOTAL_SIZE];
     bzero(buffer, NETWORK_PACKET_TOTAL_SIZE);
-    // epoll?
+
     while (1) {
-        if ((connectionfd = accept(socketfd, (struct sockaddr *) NULL, NULL)) < 0) {
-            helper_error_message("accept");
+        read_fd_set = active_fd_set;
+        if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0) {
+            helper_error_message("select");
             return 1;
         }
 
-
-        while (read_not_less_than(connectionfd, buffer, NETWORK_PACKET_TOTAL_SIZE) == 0) {
-            struct packet *network_packet = (struct packet *) malloc(sizeof(struct packet));
-            network_decode_packet(buffer, network_packet);
-
-            char md5_generated[NETWORK_PACKET_MD5_SIZE];
-            if (mbedtls_md5_ret((const unsigned char *) &network_packet->data, NETWORK_PACKET_DATA_SIZE, (unsigned char *) md5_generated) != 0) {
-                helper_error_message("mbedtls_md5_ret");
-                return 1;
+        for (i = 0; i < FD_SETSIZE; i++) {
+            if (!FD_ISSET(i, &read_fd_set)) {
+                continue;
             }
 
-            struct packet_with_validation *packet_with_validation = (struct packet_with_validation *) malloc(sizeof(struct packet_with_validation));
-            packet_with_validation->packet = network_packet;
-            packet_with_validation->is_valid = memcmp(&network_packet->md5, md5_generated, NETWORK_PACKET_MD5_SIZE) == 0;
+            if (i == socketfd) {
+                if ((connectionfd = accept(socketfd, (struct sockaddr *) NULL, NULL)) < 0) {
+                    helper_error_message("accept");
+                    return 1;
+                }
 
-            pthread_mutex_lock(&mutex);
+                struct timeval tv;
+                tv.tv_sec = 0;
+                tv.tv_usec = 50000; // 0.05 sec
 
-            unsigned int index;
-            if (packets_buffer_elements_count < PACKETS_BUFFER_SIZE) {
-                index = packets_buffer_elements_count;
-            } else if (packets_buffer_elements_count % PACKETS_BUFFER_SIZE == 0) {
-                index = 0;
-            } else {
-                index = packets_buffer_elements_count % PACKETS_BUFFER_SIZE - 1;
+                setsockopt(connectionfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+                FD_SET(connectionfd, &active_fd_set);
+                continue;
             }
 
-            packets_buffer[index] = packet_with_validation;
-            packets_buffer_elements_count++;
+            while (read_not_less_than(connectionfd, buffer, NETWORK_PACKET_TOTAL_SIZE) == 0) {
+                struct packet *network_packet = (struct packet *) malloc(sizeof(struct packet));
+                network_decode_packet(buffer, network_packet);
 
-            pthread_cond_signal(&condition);
-            pthread_mutex_unlock(&mutex);
+                char md5_generated[NETWORK_PACKET_MD5_SIZE];
+                if (mbedtls_md5_ret((const unsigned char *) &network_packet->data, NETWORK_PACKET_DATA_SIZE, (unsigned char *) md5_generated) !=
+                    0) {
+                    helper_error_message("mbedtls_md5_ret");
+                    return 1;
+                }
 
-            char *status_message = get_validation_message_by_validation_status(packet_with_validation->is_valid);
-            printf("Received: #%d #%lu %s\n", network_packet->number, network_packet->microtime, status_message);
+                struct packet_with_validation *packet_with_validation = (struct packet_with_validation *) malloc(
+                        sizeof(struct packet_with_validation));
+                packet_with_validation->packet = network_packet;
+                packet_with_validation->is_valid = memcmp(&network_packet->md5, md5_generated, NETWORK_PACKET_MD5_SIZE) == 0;
+
+                pthread_mutex_lock(&mutex);
+
+                unsigned int index;
+                if (packets_buffer_elements_count < PACKETS_BUFFER_SIZE) {
+                    index = packets_buffer_elements_count;
+                } else if (packets_buffer_elements_count % PACKETS_BUFFER_SIZE == 0) {
+                    index = 0;
+                } else {
+                    index = packets_buffer_elements_count % PACKETS_BUFFER_SIZE - 1;
+                }
+
+                packets_buffer[index] = packet_with_validation;
+                packets_buffer_elements_count++;
+
+                pthread_cond_signal(&condition);
+                pthread_mutex_unlock(&mutex);
+
+                char *status_message = get_validation_message_by_validation_status(packet_with_validation->is_valid);
+                printf("Received: #%d #%lu %s\n", network_packet->number, network_packet->microtime, status_message);
+            }
         }
     }
 }
