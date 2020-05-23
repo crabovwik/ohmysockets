@@ -100,14 +100,16 @@ int main(int argc, char **argv) {
     char buffer[NETWORK_PACKET_TOTAL_SIZE];
     bzero(buffer, NETWORK_PACKET_TOTAL_SIZE);
 
+    int maxfd = socketfd;
+
     while (1) {
         read_fd_set = active_fd_set;
-        if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0) {
+        if (select(maxfd + 1, &read_fd_set, NULL, NULL, NULL) < 0) {
             helper_error_message("select");
             return 1;
         }
 
-        for (i = 0; i < FD_SETSIZE; i++) {
+        for (i = 0; i <= maxfd; i++) {
             if (!FD_ISSET(i, &read_fd_set)) {
                 continue;
             }
@@ -116,6 +118,16 @@ int main(int argc, char **argv) {
                 if ((connectionfd = accept(i, (struct sockaddr *) NULL, NULL)) < 0) {
                     helper_error_message("accept");
                     return 1;
+                }
+
+                if (connectionfd >= FD_SETSIZE) {
+                    helper_error_message("connectionfd greater than FD_SETSIZE");
+                    close(connectionfd);
+                    continue;
+                }
+
+                if (connectionfd > maxfd) {
+                    maxfd = connectionfd;
                 }
 
                 struct timeval tv;
