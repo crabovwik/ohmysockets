@@ -167,7 +167,10 @@ int main(int argc, char **argv) {
             packet_with_validation->packet = network_packet;
             packet_with_validation->is_valid = memcmp(&network_packet->md5, md5_generated, NETWORK_PACKET_MD5_SIZE) == 0;
 
-            pthread_mutex_lock(&mutex);
+            if (pthread_mutex_lock(&mutex) != 0) {
+                helper_error_message("pthread_mutex_lock");
+                return 1;
+            }
 
             if (cb_push(cb, packet_with_validation) != 0) {
                 helper_error_message("cb_push");
@@ -175,7 +178,10 @@ int main(int argc, char **argv) {
             }
 
             pthread_cond_signal(&condition);
-            pthread_mutex_unlock(&mutex);
+            if (pthread_mutex_unlock(&mutex) != 0) {
+                helper_error_message("pthread_mutex_unlock");
+                return 1;
+            }
 
             char *status_message = get_validation_message_by_validation_status(packet_with_validation->is_valid);
             printf("Received: #%d #%lu %s\n", network_packet->number, network_packet->microtime, status_message);

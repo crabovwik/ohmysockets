@@ -25,7 +25,7 @@ struct circular_buffer *cb_create(unsigned int length) {
 
 struct packet_with_validation *cb_pull(struct circular_buffer *cb) {
     if (pthread_mutex_lock(cb->mutex) != 0) {
-        helper_error_message("oh fush");
+        helper_error_message("pthread_mutex_lock");
         return NULL;
     }
 
@@ -51,7 +51,7 @@ struct packet_with_validation *cb_pull(struct circular_buffer *cb) {
 
     if (pthread_mutex_unlock(cb->mutex) != 0) {
         // todo: return pulled data again to the array
-        helper_error_message("oh fuck");
+        helper_error_message("pthread_mutex_unlock");
         return NULL;
     }
 
@@ -60,7 +60,7 @@ struct packet_with_validation *cb_pull(struct circular_buffer *cb) {
 
 int cb_push(struct circular_buffer *cb, struct packet_with_validation *const packet) {
     if (pthread_mutex_lock(cb->mutex) != 0) {
-        helper_error_message("oh fush");
+        helper_error_message("pthread_mutex_lock");
         return -1;
     }
 
@@ -90,7 +90,7 @@ int cb_push(struct circular_buffer *cb, struct packet_with_validation *const pac
 
     if (pthread_mutex_unlock(cb->mutex) != 0) {
         // todo: return pulled data again to the array
-        helper_error_message("oh fush");
+        helper_error_message("pthread_mutex_unlock");
         return -1;
     }
 
@@ -99,7 +99,7 @@ int cb_push(struct circular_buffer *cb, struct packet_with_validation *const pac
 
 unsigned int cb_current_length(struct circular_buffer *cb) {
     if (pthread_mutex_lock(cb->mutex) != 0) {
-        helper_error_message("oh fuck");
+        helper_error_message("pthread_mutex_lock");
         return -1;
     }
 
@@ -117,7 +117,7 @@ unsigned int cb_current_length(struct circular_buffer *cb) {
     }
 
     if (pthread_mutex_unlock(cb->mutex) != 0) {
-        helper_error_message("oh fush");
+        helper_error_message("pthread_mutex_unlock");
         return -1;
     }
 
