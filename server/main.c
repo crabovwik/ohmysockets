@@ -22,42 +22,46 @@ static char *STATUS_FAIL = "FAIL";
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t condition = PTHREAD_COND_INITIALIZER;
 
-static struct packet_with_validation *packets_buffer[PACKETS_BUFFER_SIZE];
-static volatile int packets_buffer_elements_count = 0;
+struct circular_buffer *cb;
 
 void *worker(void *arg) {
     while (1) {
-        pthread_mutex_lock(&mutex);
+        if (pthread_mutex_lock(&mutex) != 0) {
+            helper_error_message("pthread_mutex_lock");
+            break;
+        }
 
-        while (packets_buffer_elements_count == 0) {
+        while (cb_current_length(cb) <= 0) {
             pthread_cond_wait(&condition, &mutex);
         }
 
         struct packet_with_validation *packet;
-        for (unsigned int i = 0; i < PACKETS_BUFFER_SIZE; i++) {
-            packet = packets_buffer[i];
-            if (packet == NULL) {
-                continue;
-            }
-
+        while ((packet = cb_pull(cb)) != NULL) {
             char *status_message = get_validation_message_by_validation_status(packet->is_valid);
             printf("Processed: #%d #%lu %s\n", packet->packet->number, packet->packet->microtime, status_message);
 
             free(packet->packet);
             free(packet);
-            packets_buffer[i] = NULL;
-            packets_buffer_elements_count--;
 
             usleep(1000 * 15);
         }
 
-        pthread_mutex_unlock(&mutex);
+        if (pthread_mutex_unlock(&mutex) != 0) {
+            helper_error_message("pthread_mutex_unlock");
+            break;
+        }
     }
 }
 
 int main(int argc, char **argv) {
     if (argc != 2) {
         printf("usage: %s port\n", argv[0]);
+        return 1;
+    }
+
+
+    if ((cb = cb_create(PACKETS_BUFFER_SIZE)) == NULL) {
+        helper_error_message("cb_create");
         return 1;
     }
 
@@ -164,17 +168,10 @@ int main(int argc, char **argv) {
 
             pthread_mutex_lock(&mutex);
 
-            unsigned int index;
-            if (packets_buffer_elements_count < PACKETS_BUFFER_SIZE) {
-                index = packets_buffer_elements_count;
-            } else if (packets_buffer_elements_count % PACKETS_BUFFER_SIZE == 0) {
-                index = 0;
-            } else {
-                index = packets_buffer_elements_count % PACKETS_BUFFER_SIZE - 1;
+            if (cb_push(cb, packet_with_validation) != 0) {
+                helper_error_message("cb_push");
+                return 1;
             }
-
-            packets_buffer[index] = packet_with_validation;
-            packets_buffer_elements_count++;
 
             pthread_cond_signal(&condition);
             pthread_mutex_unlock(&mutex);
@@ -213,4 +210,125 @@ int read_not_less_than(int fd, char *buffer, unsigned int size) {
     } while ((size - total_read_bytes) != 0);
 
     return 0;
+}
+
+
+struct circular_buffer *cb_create(unsigned int length) {
+    if (length == 0) {
+        return NULL;
+    }
+
+    struct circular_buffer *cb = calloc(1, sizeof(struct circular_buffer));
+
+    cb->length = length;
+
+    cb->data = (struct packet_with_validation **) malloc(sizeof(struct packet_with_validation) * length);
+
+    cb->mutex = calloc(1, sizeof(pthread_mutex_t));
+    if (pthread_mutex_init(cb->mutex, NULL) != 0) {
+        return NULL;
+    }
+
+    return cb;
+}
+
+struct packet_with_validation *cb_pull(struct circular_buffer *cb) {
+    if (pthread_mutex_lock(cb->mutex) != 0) {
+        helper_error_message("oh fush");
+        return NULL;
+    }
+
+    struct packet_with_validation *packet;
+
+    if (!cb->is_dirty && cb->push_index == cb->pull_index) {
+        packet = NULL;
+    } else {
+        packet = cb->data[cb->pull_index];
+
+        cb->data[cb->pull_index] = NULL;
+        cb->pull_index++;
+
+        if (cb->pull_index == cb->length) {
+            cb->pull_index = 0;
+        }
+
+        // all data has been read
+        if (cb->push_index == cb->pull_index) {
+            cb->is_dirty = 0;
+        }
+    }
+
+    if (pthread_mutex_unlock(cb->mutex) != 0) {
+        // todo: return pulled data again to the array
+        helper_error_message("oh fuck");
+        return NULL;
+    }
+
+    return packet;
+}
+
+int cb_push(struct circular_buffer *cb, struct packet_with_validation *const packet) {
+    if (pthread_mutex_lock(cb->mutex) != 0) {
+        helper_error_message("oh fush");
+        return -1;
+    }
+
+    // overflow
+    if (cb->is_dirty && cb->push_index == cb->pull_index) {
+        cb->pull_index++;
+
+        if (cb->pull_index == cb->length) {
+            cb->pull_index = 0;
+        }
+    }
+
+    // freeing
+    if (cb->data[cb->push_index] != NULL) {
+        free(cb->data[cb->push_index]->packet);
+        free(cb->data[cb->push_index]);
+    }
+
+    cb->data[cb->push_index++] = packet;
+    if (cb->push_index == cb->length) {
+        cb->push_index = 0;
+    }
+
+    if (!cb->is_dirty) {
+        cb->is_dirty = 1;
+    }
+
+    if (pthread_mutex_unlock(cb->mutex) != 0) {
+        // todo: return pulled data again to the array
+        helper_error_message("oh fush");
+        return -1;
+    }
+
+    return 0;
+}
+
+unsigned int cb_current_length(struct circular_buffer *cb) {
+    if (pthread_mutex_lock(cb->mutex) != 0) {
+        helper_error_message("oh fuck");
+        return -1;
+    }
+
+    unsigned int return_length;
+    if (cb->push_index == cb->pull_index) {
+        if (cb->is_dirty) {
+            return_length = 1;
+        } else {
+            return_length = 0;
+        }
+    } else if (cb->push_index > cb->pull_index) {
+        return_length = cb->push_index - cb->pull_index;
+    } else {
+        return_length = cb->length - (cb->pull_index - cb->push_index);
+    }
+
+    if (pthread_mutex_unlock(cb->mutex) != 0) {
+        helper_error_message("oh fush");
+        return -1;
+    }
+
+    return return_length;
 }
