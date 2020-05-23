@@ -10,6 +10,6 @@ struct packet_with_validation {
 
 char *get_validation_message_by_validation_status(int i);
 
-unsigned int read_not_less_than(int fd, char *buffer, unsigned int size);
+int read_not_less_than(int fd, char *buffer, unsigned int size);
 
 #endif //SERVER_MAIN_H
