@@ -43,8 +43,6 @@ void *worker(void *arg) {
 
             free(packet->packet);
             free(packet);
-
-            usleep(1000 * 15);
         }
 
         if (pthread_mutex_unlock(&mutex) != 0) {
